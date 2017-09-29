@@ -1,8 +1,14 @@
 const util = require('util')
+const {U64, I64} = require('n64');
 
 // These are needed for the timestamp calculation
 const gpsEpochSeconds = 315964800;
 const weekSeconds = 60 * 60 * 24 * 7;
+
+module.exports = {
+    parse: parse,
+    _readValue: _readValue
+}
 
 function gpsToEpochMicroseconds(gms, gwk) {
 	// gms Time of Week
@@ -11,7 +17,7 @@ function gpsToEpochMicroseconds(gms, gwk) {
 	return (gpsEpochSeconds + weekSeconds * gwk) * 1000 + gms
 }
 
-exports.parse = function (binaryData, callback) {
+function parse(binaryData, callback) {
 	var index = 0
     var formats = {}
 
@@ -54,7 +60,7 @@ exports.parse = function (binaryData, callback) {
 	    		for (var x = 0; x < format.length; x++)
 				{
 				    var formatChar = format.charAt(x)
-				    var result = readValue(message, offset, formatChar)
+				    var result = _readValue(message, offset, formatChar)
 				    event[formats[msgid]['labels'][x]] = result.value;
 				    offset = offset + result.bytesRead
 				}
@@ -87,7 +93,7 @@ exports.parse = function (binaryData, callback) {
     callback(null, results)
 }
 
-function readValue(message, offset, formatChar) {
+function _readValue(message, offset, formatChar) {
 	var result = {}
     result.value = undefined;
     result.bytesRead = 0;
@@ -95,13 +101,13 @@ function readValue(message, offset, formatChar) {
 
     switch (formatChar) {
     	case 'b': //ctypes.c_int8
-    	    var array = new Int8Array(message.slice(offset, offset + 1))
+            var array = new Int8Array(message.slice(offset, offset + 1))
     		result.value = array[0]
     		result.bytesRead = 1
     		break;
     	case 'B': //ctypes.c_uint8
     	case 'M': //ctypes.c_uint8
-    	    var array = new Uint8Array(message.slice(offset, offset + 1))
+            var array = new Uint8Array(message.slice(offset, offset + 1))
     		result.value = array[0]
     		result.bytesRead = 1
     		break;
@@ -179,15 +185,13 @@ function readValue(message, offset, formatChar) {
     		result.bytesRead = 4
     		break;
     	case 'q': // ctypes.c_int64
-    		var array = new Uint8Array(message.slice(offset, offset + 8))
-    		var array32 = new Uint32Array(array.buffer)
-    	    result.value = array[0] << 32 + array[1]
+            var signed64 = I64.readRaw(message.slice(offset, offset + 8), 0)
+            result.value =  signed64.toNumber()
     		result.bytesRead = 8
     		break;
     	case 'Q': // ctypes.c_uint64
-    		var array = new Uint8Array(message.slice(offset, offset + 8))
-    		var array32 = new Uint32Array(array.buffer)
-    	    result.value =  (array32[1] << 32) + array32[0]
+            var unsigned64 = U64.readRaw(message.slice(offset, offset + 8), 0)
+            result.value =  unsigned64.toNumber()
     		result.bytesRead = 8
     		break;
     }
