@@ -99,52 +99,48 @@ function _readValue(message, offset, formatChar) {
     result.bytesRead = 0;
     result.formatChar = formatChar;
 
+    var uint8array = new Uint8Array(message)
+
     switch (formatChar) {
     	case 'b': //ctypes.c_int8
-            var array = new Int8Array(message.slice(offset, offset + 1))
+            var array = new Int8Array(uint8array.buffer.slice(offset, offset + 1))
     		result.value = array[0]
     		result.bytesRead = 1
     		break;
     	case 'B': //ctypes.c_uint8
     	case 'M': //ctypes.c_uint8
-            var array = new Uint8Array(message.slice(offset, offset + 1))
+            var array = new Uint8Array(uint8array.buffer.slice(offset, offset + 1))
     		result.value = array[0]
     		result.bytesRead = 1
     		break;
     	case 'h': //ctypes.c_int16
-    		var array = new Uint8Array(message.slice(offset, offset + 2))
-    	    var array16 = new Int16Array(array.buffer)
+    	    var array16 = new Int16Array(uint8array.buffer.slice(offset, offset + 2))
     	    result.value = array16[0]
     		result.bytesRead = 2
     		break;
     	case 'H': // ctypes.c_uint16
-    		var array = new Uint8Array(message.slice(offset, offset + 2))
-    	    var array16 = new Uint16Array(array.buffer)
+    	    var array16 = new Uint16Array(uint8array.buffer.slice(offset, offset + 2))
     	    result.value = array16[0]
     		result.bytesRead = 2
     		break;
     	case 'i': // ctypes.c_int32
     	case 'L': // ctypes.c_int32
-    		var array = new Uint8Array(message.slice(offset, offset + 4))
-    		var array32 = new Int32Array(array.buffer)
+    		var array32 = new Int32Array(uint8array.buffer.slice(offset, offset + 4))
     	    result.value = array32[0]
     	    result.bytesRead = 4
     		break;
     	case 'I': // ctypes.c_uint32
-    		var array = new Uint8Array(message.slice(offset, offset + 4))
-    		var array32 = new Uint32Array(array.buffer)
+    		var array32 = new Uint32Array(uint8array.buffer.slice(offset, offset + 4))
     	    result.value = array32[0]
     		result.bytesRead = 4
     		break;
     	case 'f': // ctypes.c_float
-    		var array = new Uint8Array(message.slice(offset, offset + 4))
-    		var arrayf = new Float32Array(array.buffer)
+    		var arrayf = new Float32Array(uint8array.buffer.slice(offset, offset + 4))
     		result.value = arrayf[0]
     		result.bytesRead = 4
     		break;
     	case 'd': //ctypes.c_double
-    		var array = new Uint8Array(message.slice(offset, offset + 8))
-    		var arrayf = new Float64Array(array.buffer)
+    		var arrayf = new Float64Array(uint8array.buffer.slice(offset, offset + 8))
     		result.value = arrayf[0]
     		result.bytesRead = 8
     		break;
@@ -161,26 +157,22 @@ function _readValue(message, offset, formatChar) {
     		result.bytesRead = 64
     		break;
     	case 'c': // ctypes.c_int16 * 100
-    		var array = new Uint8Array(message.slice(offset, offset + 2))
-    		var array16 = new Int16Array(array.buffer)
+    		var array16 = new Int16Array(uint8array.buffer.slice(offset, offset + 2))
     	    result.value = array16[0] / 100
     		result.bytesRead = 2
     		break;
     	case 'C': // ctypes.c_uint16 * 100
-    		var array = new Uint8Array(message.slice(offset, offset + 2))
-    		var array16 = new Uint16Array(array.buffer)
+    		var array16 = new Uint16Array(uint8array.buffer.slice(offset, offset + 2))
     	    result.value = array16[0] / 100
     		result.bytesRead = 2
     		break;
     	case 'e': // ctypes.c_int32 * 100
-    		var array = new Uint8Array(message.slice(offset, offset + 4))
-    		var array32 = new Int32Array(array.buffer)
+    		var array32 = new Int32Array(uint8array.buffer.slice(offset, offset + 4))
     	    result.value = array32[0] / 100
     		result.bytesRead = 4
     		break;
     	case 'E': // ctypes.c_uint32 * 100
-    		var array = new Uint8Array(message.slice(offset, offset + 4))
-    		var array32 = new Uint32Array(array.buffer)
+    		var array32 = new Uint32Array(uint8array.buffer.slice(offset, offset + 4))
     	    result.value = array32[0] / 100
     		result.bytesRead = 4
     		break;
