@@ -13,7 +13,6 @@ module.exports = {
 function gpsToEpochMicroseconds(gms, gwk) {
 	// gms Time of Week
 	// gwk Week number
-	console.log("gms=" + gms + ", gwk=" + gwk + " => " + (gpsEpochSeconds + weekSeconds * gwk + gms))
 	return (gpsEpochSeconds + weekSeconds * gwk) * 1000 + gms
 }
 
@@ -77,8 +76,6 @@ function parse(binaryData, callback) {
 					referenceTimestamp['reference'] = gpsToEpochMicroseconds(event.GMS, event.GWk)
 
 					results.referenceTimestamp = referenceTimestamp;
-					console.log(util.inspect(event))
-					console.log(util.inspect(referenceTimestamp))
 				}
 	    	} else {
 	    		console.warn("Unknown messageId " + msgid)
