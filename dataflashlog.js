@@ -24,17 +24,20 @@ function parse(binaryData, callback) {
     results = {}
     results['messages'] = []
 
+    var binaryDataArray = new Uint8Array(binaryData)
+    var binaryDataView = new DataView(binaryDataArray.buffer)
+
     while (index + 4 < binaryData.length) {
 
 	    if (binaryData[index + 0] != 0xff && binaryData[index + 1] != 0xff) {
 	    	// We have a valid message
 	    	// third byte is the message id
-	    	var msgid = binaryData[index + 2]
+	    	var msgid = binaryDataView.getUint8(index + 2)
 	    	var size = 0
 
 	    	if (msgid == 0x80) { // FMT
-	    		var msgtype = binaryData[index + 3]
-		    	var length = binaryData[index + 4]
+	    		var msgtype = binaryDataView.getUint8(index + 3)
+		    	var length = binaryDataView.getUint8(index + 4)
 		    	var name = binaryData.slice(index + 5, index + 5 + 4)
 		    	var types = binaryData.slice(index + 9, index + 9 + 16)
 		    	var labels = binaryData.slice(index + 25, index + 25 + 64)
@@ -49,7 +52,6 @@ function parse(binaryData, callback) {
 	    	}
 	    	if (msgid in formats) {
 	    		// console.log("Message " + formats[msgid]['name'] + " with length " + formats[msgid]['size'] )
-	    		var message = binaryData.slice(index, index + formats[msgid]['size'])
 
 	    		var format = formats[msgid]['format']
 	    		var offset = 3; // Start after the header
@@ -60,7 +62,7 @@ function parse(binaryData, callback) {
 	    		for (var x = 0; x < format.length; x++)
 				{
 				    var formatChar = format.charAt(x)
-				    var result = _readValue(message, offset, formatChar)
+				    var result = _readValue(binaryData, binaryDataView, index + offset, formatChar)
 				    event[formats[msgid]['labels'][x]] = result.value;
 				    offset = offset + result.bytesRead
 				}
@@ -93,55 +95,45 @@ function parse(binaryData, callback) {
     callback(null, results)
 }
 
-function _readValue(message, offset, formatChar) {
+function _readValue(message, dv, offset, formatChar) {
 	var result = {}
     result.value = undefined;
     result.bytesRead = 0;
     result.formatChar = formatChar;
 
-    var uint8array = new Uint8Array(message)
-
     switch (formatChar) {
     	case 'b': //ctypes.c_int8
-            var array = new Int8Array(uint8array.buffer.slice(offset, offset + 1))
-    		result.value = array[0]
+    		result.value = dv.getInt8(offset, true)
     		result.bytesRead = 1
     		break;
     	case 'B': //ctypes.c_uint8
     	case 'M': //ctypes.c_uint8
-            var array = new Uint8Array(uint8array.buffer.slice(offset, offset + 1))
-    		result.value = array[0]
+    		result.value = dv.getUint8(offset, true)
     		result.bytesRead = 1
     		break;
     	case 'h': //ctypes.c_int16
-    	    var array16 = new Int16Array(uint8array.buffer.slice(offset, offset + 2))
-    	    result.value = array16[0]
+    	    result.value = dv.getInt16(offset, true)
     		result.bytesRead = 2
     		break;
     	case 'H': // ctypes.c_uint16
-    	    var array16 = new Uint16Array(uint8array.buffer.slice(offset, offset + 2))
-    	    result.value = array16[0]
+    	    result.value = dv.getUint16(offset, true)
     		result.bytesRead = 2
     		break;
     	case 'i': // ctypes.c_int32
     	case 'L': // ctypes.c_int32
-    		var array32 = new Int32Array(uint8array.buffer.slice(offset, offset + 4))
-    	    result.value = array32[0]
+    	    result.value = dv.getInt32(offset, true)
     	    result.bytesRead = 4
     		break;
     	case 'I': // ctypes.c_uint32
-    		var array32 = new Uint32Array(uint8array.buffer.slice(offset, offset + 4))
-    	    result.value = array32[0]
+    	    result.value = dv.getUint32(offset, true)
     		result.bytesRead = 4
     		break;
     	case 'f': // ctypes.c_float
-    		var arrayf = new Float32Array(uint8array.buffer.slice(offset, offset + 4))
-    		result.value = arrayf[0]
+    		result.value = dv.getFloat32(offset, true)
     		result.bytesRead = 4
     		break;
     	case 'd': //ctypes.c_double
-    		var arrayf = new Float64Array(uint8array.buffer.slice(offset, offset + 8))
-    		result.value = arrayf[0]
+    		result.value = dv.getFloat64(offset, true)
     		result.bytesRead = 8
     		break;
     	case 'n': // ctypes.c_char * 4
@@ -157,23 +149,19 @@ function _readValue(message, offset, formatChar) {
     		result.bytesRead = 64
     		break;
     	case 'c': // ctypes.c_int16 * 100
-    		var array16 = new Int16Array(uint8array.buffer.slice(offset, offset + 2))
-    	    result.value = array16[0] / 100
+    	    result.value = dv.getInt16(offset, true) / 100
     		result.bytesRead = 2
     		break;
     	case 'C': // ctypes.c_uint16 * 100
-    		var array16 = new Uint16Array(uint8array.buffer.slice(offset, offset + 2))
-    	    result.value = array16[0] / 100
+    	    result.value = dv.getUint16(offset, true) / 100
     		result.bytesRead = 2
     		break;
     	case 'e': // ctypes.c_int32 * 100
-    		var array32 = new Int32Array(uint8array.buffer.slice(offset, offset + 4))
-    	    result.value = array32[0] / 100
+    	    result.value = dv.getInt32(offset, true) / 100
     		result.bytesRead = 4
     		break;
     	case 'E': // ctypes.c_uint32 * 100
-    		var array32 = new Uint32Array(uint8array.buffer.slice(offset, offset + 4))
-    	    result.value = array32[0] / 100
+    	    result.value = dv.getUint32(offset, true) / 100
     		result.bytesRead = 4
     		break;
     	case 'q': // ctypes.c_int64
