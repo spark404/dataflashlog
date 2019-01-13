@@ -1,25 +1,29 @@
 "use strict";
 
+const fs = require("fs");
+const util = require("util");
+
 const chai = require("chai");
-const expect = require("chai").expect;
 const chaiAlmost = require("chai-almost");
+const chaiAsPromised = require("chai-as-promised");
+const expect = require("chai").expect;
 
 chai.use(chaiAlmost());
+chai.use(chaiAsPromised);
 
-
-var testMessage = [ // Format QBIHBcLLefffB
+const testMessage = [ // Format QBIHBcLLefffB
   0xa3, 0x95, 0x82, 0x49, 0xe6, 0x21, 0x03, 0x00, 0x00, 0x00, 0x00, 0x03, 0x40, 0xef, 0x78, 0x02,
   0xaf, 0x07, 0x0d, 0x4b, 0x00, 0x11, 0x70, 0x04, 0x1f, 0xe0, 0x2a, 0x11, 0x03, 0xb4, 0x00, 0x00,
   0x00, 0x59, 0x39, 0x34, 0x3d, 0x00, 0x00, 0x00, 0x00, 0x25, 0x06, 0x81, 0x3d, 0x01];
-var testDataView = new DataView(new Uint8Array(testMessage).buffer);
+const testDataView = new DataView(new Uint8Array(testMessage).buffer);
 
 describe("Dataflashlog module", () => {
   const dataflashlog = require("../dataflashlog");
 
-  describe("parse", () => {
+  describe("_readValue", () => {
 
     it("should export a function", () => {
-      expect(dataflashlog.parse).to.be.a("function");
+      expect(dataflashlog._readValue).to.be.a("function");
     });
 
     it("should return -1 for 0xFF and format \"b\"", () => {
@@ -274,5 +278,25 @@ describe("Dataflashlog module", () => {
     });
 
   });
-});
 
+  describe("parse", () => {
+
+    it("should export a function", async function () {
+      expect(dataflashlog.parse).to.be.a("function");
+    });
+
+    it("should parse messages from log.bin", async function () {
+      const buffer = fs.readFileSync(__dirname + "/log.bin");
+
+      let parseAsync = util.promisify(dataflashlog.parse);
+      const data = await parseAsync(buffer);
+
+      expect(data).to.have.property("messages");
+      expect(data).to.have.property("referenceTimestamp");
+      expect(data.referenceTimestamp).to.have.property("timeus", 402735374);
+      expect(data.referenceTimestamp).to.have.property("reference", 1505040580800);
+    });
+
+  });
+
+});
