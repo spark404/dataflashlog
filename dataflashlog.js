@@ -56,6 +56,12 @@ function parse(binaryData, callback) {
           "name": formats[msgid]["name"]
         };
 
+        console.log(event, binaryData.length, index, formats[msgid]["size"])
+        if ((index + formats[msgid]["size"]) > binaryData.length) {
+          console.log("Skipping incomplete message");
+          index = binaryData.length
+          continue
+        }
         for (let x = 0; x < format.length; x++)
         {
           const formatChar = format.charAt(x);
@@ -63,6 +69,7 @@ function parse(binaryData, callback) {
           event[formats[msgid]["labels"][x]] = result.value;
           offset = offset + result.bytesRead;
         }
+
         messages.push(event);
 
         if (event.name === "GPS" && referenceTimestamp == null) {
