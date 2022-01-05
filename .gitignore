@@ -7,3 +7,8 @@ coverage
 .serverless
 
 .idea
+
+out/
+
+# TS -incremental file
+tsconfig.tsbuildinfo
