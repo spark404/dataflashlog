@@ -9,6 +9,7 @@ coverage
 .idea
 
 out/
+dist/
 
 # TS -incremental file
 tsconfig.tsbuildinfo

@@ -1,0 +1,8 @@
+test/
+.idea
+.eslintignore
+.eslintrc.js
+babel.config.js
+tsconfig.json
+jest.config.ts
+.github/
